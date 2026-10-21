@@ -4,49 +4,410 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Recommender System</title>
-    <!-- Modern clean Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Modern Google Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #080b12;
+            --surface-color: rgba(18, 24, 38, 0.7);
+            --surface-hover: rgba(28, 38, 60, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(56, 189, 248, 0.4);
+            --accent-cyan: #38bdf8;
+            --accent-blue: #2563eb;
+            --accent-purple: #8b5cf6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --radius-md: 14px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.5;
+            position: relative;
+            overflow-x: hidden;
+            padding: 40px 20px 80px;
+        }
+
+        /* Ambient Glow Backgrounds */
+        .ambient-glow {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.25;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-top-left {
+            top: -150px;
+            left: -100px;
+            background: radial-gradient(circle, var(--accent-purple), transparent 70%);
+        }
+        .glow-bottom-right {
+            bottom: -150px;
+            right: -100px;
+            background: radial-gradient(circle, var(--accent-cyan), transparent 70%);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1160px;
+            margin: 0 auto;
+        }
+
+        /* Header Section */
+        .header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 9999px;
+            color: var(--accent-cyan);
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.6rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            max-width: 580px;
+            margin: 0 auto;
+        }
+
+        /* Movie Selection Form Card */
+        .form-card {
+            background: var(--surface-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 46px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+            transition: border-color 0.3s ease;
+        }
+
+        .form-card:focus-within {
+            border-color: var(--border-glow);
+        }
+
+        .form-card label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-card label i {
+            color: var(--accent-cyan);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .select-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 280px;
+        }
+
+        select {
+            width: 100%;
+            padding: 14px 44px 14px 18px;
+            background: #0b0f19;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all 0.25s ease;
+        }
+
+        select:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        .select-icon {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 0.85rem;
+        }
+
+        .submit-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+            transition: all 0.25s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(37, 99, 235, 0.5);
+            background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%);
+        }
+
+        /* Results Section */
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .results-header h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.55rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .results-header h2 i {
+            color: var(--accent-cyan);
+        }
+
+        .selected-pill {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 4px 14px;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* 5-Column Movie Card Grid */
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 22px;
+        }
+
+        .movie-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--border-glow);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.2);
+        }
+
+        .rank-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #f8fafc;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            z-index: 2;
+        }
+
+        .poster-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 2 / 3;
+            background: #0f1422;
+            overflow: hidden;
+        }
+
+        .poster-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .movie-card:hover .poster-box img {
+            transform: scale(1.06);
+        }
+
+        .movie-title {
+            padding: 14px 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-align: center;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive Layout */
+        @media (max-width: 992px) {
+            .movie-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            .form-row {
+                flex-direction: column;
+            }
+            .submit-btn {
+                width: 100%;
+            }
+            .movie-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
+
+    <!-- Ambient Glowing Backgrounds -->
+    <div class="ambient-glow glow-top-left"></div>
+    <div class="ambient-glow glow-bottom-right"></div>
 
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <h1>🎬 Movie Recommender System</h1>
-            <p>Select a movie from the dropdown to see 5 similar movies with posters.</p>
+            <span class="badge-pill"><i class="fa-solid fa-sparkles"></i> AI Recommender</span>
+            <h1>Movie <span class="gradient-text">Recommender</span> System</h1>
+            <p>Pick a movie you love and discover 5 top similar films with official posters.</p>
         </header>
 
         <!-- Movie Selection Form -->
-        <form method="POST" action="/" class="recommender-form">
-            <label for="movie-select">Select a Movie:</label>
-            <div class="form-row">
-                <select name="selected_movie" id="movie-select" required>
-                    <option value="" disabled {% if not selected_movie %}selected{% endif %}>
-                        -- Choose a movie --
-                    </option>
-                    {% for movie in movie_list %}
-                        <option value="{{ movie }}" {% if movie == selected_movie %}selected{% endif %}>
-                            {{ movie }}
-                        </option>
-                    {% endfor %}
-                </select>
+        <div class="form-card">
+            <form method="POST" action="/">
+                <label for="movie-select">
+                    <i class="fa-solid fa-film"></i> Select a Movie from Database:
+                </label>
+                <div class="form-row">
+                    <div class="select-wrapper">
+                        <select name="selected_movie" id="movie-select" required>
+                            <option value="" disabled {% if not selected_movie %}selected{% endif %}>
+                                -- Choose a movie (e.g. Avatar, The Dark Knight, Inception) --
+                            </option>
+                            {% for movie in movie_list %}
+                                <option value="{{ movie }}" {% if movie == selected_movie %}selected{% endif %}>
+                                    {{ movie }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                    </div>
 
-                <button type="submit" class="submit-btn">Show Recommendations</button>
-            </div>
-        </form>
+                    <button type="submit" class="submit-btn">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Show Recommendations
+                    </button>
+                </div>
+            </form>
+        </div>
 
         <!-- Recommendations Display -->
         {% if recommended_movies %}
             <div class="results-section">
-                <h2>Recommended Movies for <span>"{{ selected_movie }}"</span></h2>
+                <div class="results-header">
+                    <h2><i class="fa-solid fa-clapperboard"></i> Top 5 Recommendations</h2>
+                    <span class="selected-pill">Based on: {{ selected_movie }}</span>
+                </div>
+                
                 <div class="movie-grid">
                     {% for name, poster in recommended_movies %}
                         <div class="movie-card">
+                            <span class="rank-badge">#{{ loop.index }}</span>
                             <div class="poster-box">
-                                <img src="{{ poster }}" alt="{{ name }}" loading="lazy">
+                                <img src="{{ poster }}" alt="{{ name }}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500&auto=format&fit=crop&q=60'">
                             </div>
-                            <h3 class="movie-title">{{ name }}</h3>
+                            <h3 class="movie-title" title="{{ name }}">{{ name }}</h3>
                         </div>
                     {% endfor %}
                 </div>
@@ -55,7 +416,7 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>Built with Python, Flask, and OMDb API | Ready for Vercel</p>
+            <p>Built with Python, Flask, and OMDb API | Serverless Ready for Vercel</p>
         </footer>
     </div>
 
