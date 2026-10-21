@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Large raw training CSVs (not required in production/Vercel)
+*.csv
+tmdb_5000_credits.csv
+tmdb_5000_movies.csv
+
+# Similarity matrix (46MB) - recommendations.pkl (1.4MB) is precomputed for Vercel
+model/similarity.pkl
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Vercel build folder
+.vercel/

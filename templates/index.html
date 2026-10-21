@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CinePulse — AI Movie Recommendation System</title>
+    <meta name="description" content="Intelligent content-based movie recommendation system powered by NLP and TMDB API. Built with Flask and ready for Vercel.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <!-- Background Glows -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <div class="app-container">
+        <!-- Top Navigation -->
+        <header class="navbar">
+            <div class="logo">
+                <i class="fa-solid fa-film logo-icon"></i>
+                <span class="logo-title">Cine<span class="gradient-text">Pulse</span></span>
+            </div>
+            <div class="nav-badges">
+                <span class="badge badge-accent"><i class="fa-solid fa-bolt"></i> Flask + Vercel</span>
+                <span class="badge badge-tmdb"><i class="fa-solid fa-clapperboard"></i> IMDb & Wikimedia HD</span>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <span class="hero-tag">AI-Powered Content Recommendation</span>
+                <h1 class="hero-title">Discover your next <span class="gradient-text">favorite story</span></h1>
+                <p class="hero-subtitle">
+                    Select a movie you love. Our machine learning engine analyzes plot keywords, cast, genres, and directors to suggest cinematic masterpieces you'll enjoy.
+                </p>
+            </div>
+
+            <!-- Search & Controls Box -->
+            <div class="search-box glass-panel">
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input 
+                        type="text" 
+                        id="movieInput" 
+                        placeholder="Search or select a movie (e.g., Avatar, The Dark Knight, Inception)..." 
+                        autocomplete="off"
+                    >
+                    <button class="clear-btn" id="clearBtn" title="Clear search" style="display: none;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <!-- Autocomplete Dropdown List -->
+                    <div class="autocomplete-list" id="autocompleteList"></div>
+                </div>
+
+                <div class="controls-row">
+                    <div class="count-selector">
+                        <label for="countSelect"><i class="fa-solid fa-list-ol"></i> Recommendations:</label>
+                        <select id="countSelect">
+                            <option value="5" selected>Top 5</option>
+                            <option value="6">Top 6</option>
+                            <option value="8">Top 8</option>
+                            <option value="10">Top 10</option>
+                        </select>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn btn-secondary" id="randomBtn" title="Pick a random movie">
+                            <i class="fa-solid fa-shuffle"></i> Surprise Me
+                        </button>
+                        <button class="btn btn-primary" id="recommendBtn">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Recommend</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Selected Movie Spotlight Banner -->
+        <section class="spotlight-section glass-panel" id="spotlightSection" style="display: none;">
+            <div class="spotlight-header">
+                <span class="spotlight-badge"><i class="fa-solid fa-compass"></i> Based on your selection</span>
+            </div>
+            <div class="spotlight-content">
+                <img id="spotlightPoster" src="" alt="Selected Movie Poster" class="spotlight-poster">
+                <div class="spotlight-details">
+                    <div class="spotlight-top">
+                        <h2 id="spotlightTitle">Movie Title</h2>
+                        <span class="spotlight-year" id="spotlightYear">2024</span>
+                    </div>
+                    <div class="spotlight-meta">
+                        <span class="rating-badge" id="spotlightRating"><i class="fa-solid fa-star"></i> 8.5</span>
+                        <div class="genres-list" id="spotlightGenres"></div>
+                    </div>
+                    <p class="spotlight-overview" id="spotlightOverview">Movie overview goes here.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recommendations Grid Section -->
+        <section class="recommendations-section">
+            <div class="section-header" id="recsHeader" style="display: none;">
+                <h2><i class="fa-solid fa-sparkles"></i> Recommended For You</h2>
+                <span class="results-count" id="resultsCount">5 Movies Found</span>
+            </div>
+
+            <!-- Loading Spinner Skeleton -->
+            <div class="loading-state" id="loadingState" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyzing cinematic similarity & fetching TMDB artwork...</p>
+            </div>
+
+            <!-- Cards Grid Container -->
+            <div class="movie-grid" id="movieGrid"></div>
+
+            <!-- Empty / Initial Guide State -->
+            <div class="empty-state" id="emptyState">
+                <i class="fa-solid fa-film empty-icon"></i>
+                <h3>No movie selected yet</h3>
+                <p>Type the name of any movie in the search box above or click <strong>Surprise Me</strong> to generate recommendations.</p>
+            </div>
+        </section>
+
+        <!-- Movie Details Modal -->
+        <div class="modal-overlay" id="movieModal" style="display: none;">
+            <div class="modal-card glass-panel">
+                <button class="modal-close" id="modalClose"><i class="fa-solid fa-xmark"></i></button>
+                <div class="modal-body">
+                    <img id="modalPoster" src="" alt="Movie Poster" class="modal-poster">
+                    <div class="modal-info">
+                        <h2 id="modalTitle">Title</h2>
+                        <div class="modal-meta-row">
+                            <span class="rating-badge" id="modalRating"><i class="fa-solid fa-star"></i> 8.0</span>
+                            <span class="modal-year" id="modalYear">2023</span>
+                            <span class="modal-match" id="modalMatch">95% Match</span>
+                        </div>
+                        <div class="genres-list" id="modalGenres"></div>
+                        <h4 class="synopsis-title">Synopsis</h4>
+                        <p id="modalOverview" class="modal-overview">Full overview description...</p>
+                        <div class="modal-actions">
+                            <a id="modalTmdbLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> View on TMDB
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Built with <span class="heart">♥</span> using Python Flask, Scikit-Learn NLP, and TMDB API. Optimized for Vercel Serverless.</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
