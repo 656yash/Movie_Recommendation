@@ -3,8 +3,15 @@ import pickle
 import requests
 from flask import Flask, render_template, request
 
-app = Flask(__name__)
+# Base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Initialize Flask with explicit template and static folder paths for Vercel
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, 'templates'),
+    static_folder=os.path.join(BASE_DIR, 'static')
+)
 
 # 1. Load data
 movies = pickle.load(open(os.path.join(BASE_DIR, 'model', 'movie_list.pkl'), 'rb'))
@@ -36,8 +43,11 @@ def recommend(movie_name):
 
     return recommended_movie_names, recommended_movie_posters
 
-# 4. Route
+# 4. Route (handles '/', '/api', '/api/index' so Vercel never 404s)
 @app.route('/', methods=['GET', 'POST'])
+@app.route('/api', methods=['GET', 'POST'])
+@app.route('/api/index', methods=['GET', 'POST'])
+@app.route('/api/index.py', methods=['GET', 'POST'])
 def home():
     movie_list = sorted(movies['title'].values)
     recommended_movies = []
@@ -47,7 +57,6 @@ def home():
         selected_movie = request.form.get('selected_movie')
         if selected_movie:
             names, posters = recommend(selected_movie)
-            # Combine into list of pairs: [('Movie 1', 'poster1_url'), ...]
             recommended_movies = list(zip(names, posters))
 
     return render_template(
